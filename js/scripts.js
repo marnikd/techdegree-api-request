@@ -1,5 +1,15 @@
+/*
+    javascript for the API requestp program
+    by Marnik Deimann
+*/
 
+//show user that the page is loading, because fetching all the data takes a while (at least with my laptop)
 document.querySelector('.header-text-container').innerHTML = "<h1>Loading...</h1>";
+
+/*fetch all the data and get the results part of the response by using map
+then the cards and modals are created for every fetched person and behaviour is added to the modals
+finally the old html is placed back and the loading... part is removed
+if an error occurs this is displayed to the user*/
 Promise.all(
     [
     fetchData('https://randomuser.me/api/'),
@@ -23,19 +33,19 @@ addBehaviour();
 })
 .finally(()=>document.querySelector('.header-text-container').innerHTML = "<h1>AWESOME STARTUP EMPLOYEE DIRECTORY</h1>")
 .catch(err => {
-    Error('failed to load');
     document.querySelector('.header-text-container').innerHTML = "<h1>Failed to load site! Sorry...</h1>";
+    console.error(Error('Failed to fetch'));
 });
 
-
+//function to fetch data and get the json format for the fetched data
 function fetchData(url){
    return fetch(url)
           .then(response => response.json());
-
 }
 
+//takes as input an array of persons and using template literals the right html is created for all persons
+//all the html is collected as one element and the innerhtml of the gallery is set to this html
 function createCards(person){
-    console.log(person)
   let cards = ''; 
   for(let i = 0; i < person.length; i++){ 
     cards += `
@@ -54,6 +64,9 @@ function createCards(person){
   document.getElementById('gallery').innerHTML = cards;
 }
 
+/*function with as input an array of persons. First creates a div element with id modals which is added to the page
+then all modals are created using template literals and is added to the innerhtml of the created element
+lastly the display settings of all modals is set to 'none'*/
 function createModals(person){
    let modals = document.createElement('DIV');
    modals.id = "modals"
@@ -79,11 +92,16 @@ function createModals(person){
                         <button type="button" id="modal-next" class="modal-next btn">Next</button>
                     </div>
                 </div>`;
-                document.getElementsByClassName(`${person[i].cell}modal`)[0].style.display = 'none';
+               hideModal(document.getElementsByClassName(`${person[i].cell}modal`)[0]);
     }
 }
 
-
+/*function to add behaviour to the modals
+first gets all the cards and modals as arrays
+then for all cards a click eventlistener is added so that the modal shows
+for the close button on the modal click eventlistener is added so the modal hides
+for the next and prev button the hide and show functions are also used
+next behaviour is not added for last card and prev behaviour not for the first card*/
 function addBehaviour(){
     const cards = document.getElementById('gallery').children;
     const modals = document.getElementById('modals').children;
@@ -93,26 +111,25 @@ function addBehaviour(){
        if(i !== 0){
             modals[i].children[1].children[0].addEventListener('click', () =>{
                 hideModal(modals[i]);
-                showModal(modals[i - 1])
+                showModal(modals[i - 1]);
             });
        }
        if(i !== 11){
-        modals[i].children[1].children[1].addEventListener('click', () =>{
-            hideModal(modals[i]);
-            showModal(modals[i + 1])
-        });
+            modals[i].children[1].children[1].addEventListener('click', () =>{
+                hideModal(modals[i]);
+                showModal(modals[i + 1]);
+            });
+        }
    }
-
-    }
 }
 
+//function to show object
 function showModal(modal){
      modal.style.display = "block";
-     console.log(modal);
 }
 
+//function to hide object
 function hideModal(modal){
     modal.style.display = "none";
-    console.log(modal);
 }
 
