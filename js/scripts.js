@@ -6,30 +6,19 @@
 //show user that the page is loading, because fetching all the data takes a while (at least with my laptop)
 document.querySelector('.header-text-container').innerHTML = "<h1>Loading...</h1>";
 
-/*fetch all the data and get the results part of the response by using map
+/*fetch all the data and get the results part of the response 
 then the cards and modals are created for every fetched person and behaviour is added to the modals
 finally the old html is placed back and the loading... part is removed
 if an error occurs this is displayed to the user*/
-Promise.all(
-    [
-    fetchData('https://randomuser.me/api/'),
-    fetchData('https://randomuser.me/api/'),
-    fetchData('https://randomuser.me/api/'),
-    fetchData('https://randomuser.me/api/'),
-    fetchData('https://randomuser.me/api/'),
-    fetchData('https://randomuser.me/api/'),
-    fetchData('https://randomuser.me/api/'),
-    fetchData('https://randomuser.me/api/'),
-    fetchData('https://randomuser.me/api/'),
-    fetchData('https://randomuser.me/api/'),
-    fetchData('https://randomuser.me/api/'),
-    fetchData('https://randomuser.me/api/')
-])
-.then(response => response.map(data => data.results[0]))
+
+fetch('https://randomuser.me/api/?results=12&nat=us')
+.then(response => response.json())
+.then(jason=> jason.results)
 .then(data =>{
 createCards(data);
 createModals(data);
 addBehaviour();
+addSearchbar();
 })
 .finally(()=>document.querySelector('.header-text-container').innerHTML = "<h1>AWESOME STARTUP EMPLOYEE DIRECTORY</h1>")
 .catch(err => {
@@ -37,18 +26,13 @@ addBehaviour();
     console.error(Error('Failed to fetch'));
 });
 
-//function to fetch data and get the json format for the fetched data
-function fetchData(url){
-   return fetch(url)
-          .then(response => response.json());
-}
 
 //takes as input an array of persons and using template literals the right html is created for all persons
 //all the html is collected as one element and the innerhtml of the gallery is set to this html
 function createCards(person){
-  let cards = ''; 
+  let cards = document.getElementById('gallery'); 
   for(let i = 0; i < person.length; i++){ 
-    cards += `
+    cards.innerHTML += `
     <div class="card ${person[i].cell}">
         <div class="card-img-container">
             <img class="card-img" src="${person[i].picture.thumbnail}" alt="profile picture">
@@ -60,8 +44,8 @@ function createCards(person){
         </div>
     </div>
     `;
+   showModal(document.getElementsByClassName(`${person[i].cell}`)[0]);
   }
-  document.getElementById('gallery').innerHTML = cards;
 }
 
 /*function with as input an array of persons. First creates a div element with id modals which is added to the page
@@ -103,7 +87,8 @@ for the close button on the modal click eventlistener is added so the modal hide
 for the next and prev button the hide and show functions are also used
 next behaviour is not added for last card and prev behaviour not for the first card*/
 function addBehaviour(){
-    const cards = document.getElementById('gallery').children;
+    let cards = document.getElementById('gallery').children;
+
     const modals = document.getElementById('modals').children;
     for(let i = 0; i<cards.length; i++){
        cards[i].addEventListener('click', (e) => showModal(modals[i]));      
@@ -113,15 +98,50 @@ function addBehaviour(){
                 hideModal(modals[i]);
                 showModal(modals[i - 1]);
             });
+       } else{
+           modals[i].children[1].children[0].style.display = 'none';
        }
        if(i !== 11){
             modals[i].children[1].children[1].addEventListener('click', () =>{
                 hideModal(modals[i]);
                 showModal(modals[i + 1]);
             });
+        } else{
+            modals[i].children[1].children[1].style.display = 'none';
         }
    }
 }
+
+//function to add searchbar
+//first right html is added to the page
+//after that a event listener is added which makes sure 
+// only the cards are displayed with a name containing the search input
+// it is still possible to cycle through all the modals
+function addSearchbar(){
+const search = `
+<form action="#" method="get">
+        <input type="search" id="search-input" class="search-input" placeholder="Search...">
+        <input type="submit" value="&#x1F50D;" id="search-submit" class="search-submit">
+</form>
+`;
+document.querySelector('.search-container').innerHTML = search;
+
+const searchButton = document.getElementById('search-submit');
+const searchInput = document.getElementById('search-input');
+const cards = document.getElementById('gallery').children;
+const names = document.getElementsByClassName('card-name');
+
+searchButton.addEventListener('click', () =>{
+    for(let i = 0; i<cards.length; i++){
+        if(names[i].textContent.toLowerCase().includes(searchInput.value.toLowerCase())){
+            cards[i].style.display = 'block'
+        } else{
+            cards[i].style.display = 'none' 
+        }
+    }
+});
+}
+
 
 //function to show object
 function showModal(modal){
